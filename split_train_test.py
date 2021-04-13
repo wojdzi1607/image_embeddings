@@ -1,7 +1,8 @@
+import cv2
+import numpy as np
+
 from pathlib import Path
 from typing import Tuple
-import numpy as np
-import cv2
 from sklearn.model_selection import train_test_split
 
 

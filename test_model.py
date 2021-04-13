@@ -1,10 +1,10 @@
-import cv2
-
-from inference import *
 from knn import *
-from pathlib import Path
-import tensorflow as tf
+from inference import *
+
+import cv2
 import time
+
+from pathlib import Path
 
 
 path_images = "data/split_dataset/train"

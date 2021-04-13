@@ -1,7 +1,9 @@
 import tensorflow as tf
-from efficientnet.tfkeras import EfficientNetB0
+
 from tensorflow.keras.optimizers import Adam
+from efficientnet.tfkeras import EfficientNetB0
 from tensorflow.keras.callbacks import ModelCheckpoint
+
 
 # Load pre-trained model
 model = EfficientNetB0(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")
