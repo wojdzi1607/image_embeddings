@@ -1,1 +1,1 @@
-# mgr_image_embeddings
+# image_embeddings
