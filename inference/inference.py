@@ -152,5 +152,5 @@ def write_tfrecord(image_folder, output_folder, num_shards=10):
 def run_inference(tfrecords_folder, output_folder, batch_size=1000):
     Path(output_folder).mkdir(parents=True, exist_ok=True)
     # model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
-    model = tf.keras.models.load_model('models/no_top_model.hdf5')
+    model = tf.keras.models.load_model('models/final_model.hdf5')
     tfrecords_to_write_embeddings(tfrecords_folder, output_folder, model, batch_size)

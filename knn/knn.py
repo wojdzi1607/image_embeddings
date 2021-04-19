@@ -3,14 +3,11 @@ import json
 import faiss
 import random
 import numpy as np
-import tensorflow as tf
 import pyarrow.parquet as pq
 
 from pathlib import Path
 from efficientnet.tfkeras import EfficientNetB0
-from image_embeddings.inference.inference import read_tfrecord
-
-from dataclasses import dataclass
+import tensorflow as tf
 from IPython.display import Image, display
 from ipywidgets import widgets, HBox, VBox
 
@@ -35,7 +32,7 @@ def embeddings_to_numpy(input_path, output_path):
 def add_to_embeddings_no_tf(image, embeddings_path):
     emb = pq.read_table(embeddings_path).to_pandas()
     # model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
-    model = tf.keras.models.load_model('models/no_top_model.hdf5')
+    model = tf.keras.models.load_model('models/final_model.hdf5')
     image = image[None, :, :, :] * (1 / 255)
     pred = model.predict(image, verbose=1)
     emb = emb.append({'image_name': b'query', 'embedding': np.array(pred[0])}, ignore_index=True)
@@ -48,9 +45,20 @@ def add_to_embeddings_no_tf(image, embeddings_path):
 def build_index(emb):
     d = emb.shape[1]
     xb = emb
-    index = faiss.IndexFlatIP(d)
-    # index = faiss.IndexLSH(d, 8)
+    # CPU
+    # index = faiss.IndexFlatIP(d)
+    # index = faiss.IndexFlatL2(d)
+    index = faiss.IndexLSH(d, 2*d)
+    # index = faiss.IndexHNSWFlat(d, 32)
+
+    # GPU
+    # res = faiss.StandardGpuResources()
+    # flat_config = faiss.GpuIndexFlatConfig()
+    # flat_config.device = 0
+    # index = faiss.GpuIndexFlatL2(res, d, flat_config)
     index.add(xb)
+    chunk = faiss.serialize_index(index)
+    print(chunk)
     return index
 
 
@@ -64,9 +72,9 @@ def random_search(path):
         print(f"{e[0]:.2f} {e[1]}")
 
 
-def search(index, id_to_name, emb, k=5):
+def search(index, id_to_name, emb, k=6):
     D, I = index.search(np.expand_dims(emb, 0), k)  # actual search
-    return list(zip(D[0], [id_to_name[x] for x in I[0]]))
+    return dict(zip([id_to_name[x] for x in I[0]], D[0]))
 
 
 def display_picture(image_path, image_name):
@@ -77,23 +85,49 @@ def display_picture(image_path, image_name):
     cv2.waitKey()
 
 
-def display_results(image_path, results):
+def display_results(q_path, res_path, results):
+    cv2.namedWindow('Test Results', )
+    q_img = cv2.imread(str(q_path))
 
-    # hbox = HBox(
-    #     [
-    #         VBox(
-    #             [
-    #                 widgets.Label(f"{distance:.2f} {image_name}"),
-    #                 widgets.Image(value=open(f"{image_path}/{image_name}.jpeg", "rb").read()),
-    #             ]
-    #         )
-    #         for distance, image_name in results
-    #     ]
-    # )
-    # display(hbox)
+    images = []
+    distances = ['Query']
+    sections = [str(q_path.stem)[0:2]]
+    for image_name, distance in results.items():
+        img = cv2.imread(f"{res_path}/{str(image_name)[0:2]}/{image_name}.jpeg")
+        images.append(img)
+        sections.append(str(image_name)[0:2])
+        distances.append(distance)
+    imgs = np.concatenate(images, axis=1)
+    f_imgs = np.concatenate((q_img, imgs), axis=1)
+    b, g, r = cv2.split(f_imgs)
+    black = np.zeros((30, f_imgs.shape[1], 3), dtype = b.dtype)
+    f_imgs = np.concatenate((f_imgs, black), axis=0)
 
-    for distance, image_name in results:
-        if image_name != "query":
-            img = cv2.imread(f"{image_path}/{image_name}.jpeg")
-            cv2.imshow(f"{distance:.2f} {image_name}", img)
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    x = 25
+    y = 210
+    fontScale = 1
+    color_default = (255, 255, 255)
+    color_green = (0, 255, 0)
+    color_red = (0, 0, 255)
+
+    lineType = 1
+    f_imgs = cv2.resize(f_imgs, (0, 0), fx=1.5, fy=1.5)
+    for i, string in enumerate(distances):
+        color = color_default
+        if str(sections[0]) == str(sections[i]) and i > 0: color = color_green
+        elif str(sections[0]) != str(sections[i]) and i > 0: color = color_red
+
+        if string != 'Query': string = np.round(string, 2)
+        text = str('[' + str(sections[i]) + ']: ' + str(string))
+        f_imgs = cv2.putText(f_imgs, text,
+                             (x, y),
+                             font,
+                             fontScale,
+                             color,
+                             lineType)
+        x += 241
+
+    cv2.imshow('Test Results', f_imgs)
+    # cv2.imwrite(f'film/img{str(q_path.stem)[-2:]}.png', f_imgs)
     cv2.waitKey()
