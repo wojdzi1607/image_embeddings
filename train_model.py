@@ -1,20 +1,29 @@
 import tensorflow as tf
+import warnings
 
 from datetime import datetime
 from tensorflow.keras.optimizers import Adam
 from efficientnet.tfkeras import EfficientNetB0
 from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau, TensorBoard
 
+warnings.filterwarnings("ignore")
+
 
 # Load pre-trained model
 model = EfficientNetB0(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")
-
+print(model.summary())
 # Freeze some layers [!]
-for layer in model.layers[:-50]:
+for layer in model.layers[:-62]:
     layer.trainable = False
+    print(layer.name)
+
+# for layer in model.layers:
+#     if layer.name[-2:] == 'bn':
+#         layer.trainable = False
+
 print(model.summary())
 batch_size = 32
-#
+
 # Load data
 train_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1 / 255,
                                                                   rotation_range=15,
@@ -69,12 +78,12 @@ trainable_model.fit(
 )
 
 # Remove last layer and save end model
-trainable_model.save("models/last_model.hdf5")
-trainable_model = tf.keras.models.load_model('models/last_model.hdf5')
-trainable_model._layers.pop()
-trainable_model.save("models/end_model.hdf5")
+# trainable_model.save("models/last_model.hdf5")
+# trainable_model = tf.keras.models.load_model('models/last_model.hdf5')
+# trainable_model._layers.pop()
+# trainable_model.save("models/end_model.hdf5")
 
 # Remove last layer and save best model
 trainable_model = tf.keras.models.load_model('models/val_model.hdf5')
 trainable_model._layers.pop()
-trainable_model.save("models/final_model.hdf5")
+trainable_model.save("models/final_model.hdf5", include_optimizer=False)    # test include_optimizer

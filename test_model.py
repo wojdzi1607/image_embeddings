@@ -1,39 +1,40 @@
 from knn import *
-from inference import *
+from inference import write_tfrecord, run_inference
 
 import cv2
 import time
 import random
+import warnings
 
 from pathlib import Path
 
+warnings.filterwarnings("ignore")
 random.seed(42)
 
 path_images = "data/split_dataset/train"
 path_tfrecords = "data/tfrecords"
 path_embeddings = "data/embeddings"
 
-# inference.write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=10)
-# inference.run_inference(tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
+write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=10)
+run_inference(tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
 
 inputPath = Path("data/split_dataset/test")
 inputFiles = inputPath.glob("**/*.jpeg")
-
-acc = 0
-n_acc = 0
-error = 0
-start0 = time.time()
 
 paths = []
 for path_to_q_img in inputFiles:
     paths.append(path_to_q_img)
 random.shuffle(paths)
 
+acc = 0
+n_acc = 0
+start0 = time.time()
+
 for path_to_q_img in paths:
-    print(f"query test: {path_to_q_img.stem}")
+
     n_acc += 1
-    s_path_to_q_img = str(path_to_q_img)
-    image = cv2.imread(s_path_to_q_img)
+
+    image = cv2.imread(str(path_to_q_img))
 
     start = time.time()
 
@@ -49,20 +50,20 @@ for path_to_q_img in paths:
     top_knn = next(iter(results))
 
     end = time.time()
-    print(f"Time for {str(path_to_q_img)}: {end - start}")
 
     # Display results
-    knn.display_results(path_to_q_img, path_images, results)
+    # knn.display_results(path_to_q_img, path_images, results)
 
     # Calculate accuracy
     q = str(path_to_q_img.stem)[0:2]
     p = str(top_knn)[0:2]
     if q == p:
         acc += 1
-print("Accuracy: ", acc)
-print("Total Accuracy: ", acc / n_acc)
-end0 = time.time()
-print(f"TOTAL TIME: {end0 - start0}")
+    print(f"query {path_to_q_img.stem} time: {end - start} val accuracy: {acc / n_acc}")
 
-with open('logs/emb_test10.txt', 'a') as file:
+print(f"Final accuracy: {acc / n_acc}")
+end0 = time.time()
+print(f"Test time: {end0 - start0}")
+
+with open('logs/emb_test_00.txt', 'a') as file:
     file.write(str("Accuracy: " + str(acc) + ", final acc: " + str(acc / n_acc) + ", time: " + str({end0 - start0}) + '\n'))

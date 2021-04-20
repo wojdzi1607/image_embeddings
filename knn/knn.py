@@ -47,8 +47,8 @@ def build_index(emb):
     xb = emb
     # CPU
     # index = faiss.IndexFlatIP(d)
-    # index = faiss.IndexFlatL2(d)
-    index = faiss.IndexLSH(d, 2*d)
+    index = faiss.IndexFlatL2(d)
+    # index = faiss.IndexLSH(d, 2*d)
     # index = faiss.IndexHNSWFlat(d, 32)
 
     # GPU
@@ -57,8 +57,6 @@ def build_index(emb):
     # flat_config.device = 0
     # index = faiss.GpuIndexFlatL2(res, d, flat_config)
     index.add(xb)
-    chunk = faiss.serialize_index(index)
-    print(chunk)
     return index
 
 
