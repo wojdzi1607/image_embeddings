@@ -6,6 +6,13 @@ import pyarrow as pa
 from pathlib import Path
 
 
+def run_inference(tfrecords_folder, output_folder, batch_size=1000):
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
+    # model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
+    model = tf.keras.models.load_model('models/final_model.hdf5')
+    tfrecords_to_write_embeddings(tfrecords_folder, output_folder, model, batch_size)
+
+
 def _int64_feature(value):
     """Returns an int64_list from a bool / enum / int / uint."""
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
@@ -137,20 +144,7 @@ def compute_save_embeddings(list_ds, folder, num_shards, model, batch_size):
     print("Total time : " + str(int(time.time() - start)))
 
 
-# def run_inference_from_files(image_folder, output_folder, num_shards=10, batch_size=1000):
-#     model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
-#     list_ds = list_files(image_folder)
-#     compute_save_embeddings(list_ds, output_folder, num_shards, model, batch_size)
-
-
 def write_tfrecord(image_folder, output_folder, num_shards=10):
     Path(output_folder).mkdir(parents=True, exist_ok=True)
     list_ds = list_files(image_folder)
     image_files_to_tfrecords(list_ds, output_folder, num_shards)
-
-
-def run_inference(tfrecords_folder, output_folder, batch_size=1000):
-    Path(output_folder).mkdir(parents=True, exist_ok=True)
-    # model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
-    model = tf.keras.models.load_model('models/final_model.hdf5')
-    tfrecords_to_write_embeddings(tfrecords_folder, output_folder, model, batch_size)

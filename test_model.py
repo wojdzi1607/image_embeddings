@@ -11,14 +11,14 @@ from pathlib import Path
 warnings.filterwarnings("ignore")
 random.seed(42)
 
-path_images = "data/split_dataset/train"
+path_images = "data/split_dataset_nop/train"
 path_tfrecords = "data/tfrecords"
 path_embeddings = "data/embeddings"
 
-write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=10)
-run_inference(tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
+# write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=10)
+# run_inference(tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
 
-inputPath = Path("data/split_dataset/test")
+inputPath = Path("data/split_dataset_nop/test")
 inputFiles = inputPath.glob("**/*.jpeg")
 
 paths = []
@@ -52,7 +52,7 @@ for path_to_q_img in paths:
     end = time.time()
 
     # Display results
-    # knn.display_results(path_to_q_img, path_images, results)
+    # knn.display_results(path_to_q_img, path_images, results)    # Comment this line when GPU is testing
 
     # Calculate accuracy
     q = str(path_to_q_img.stem)[0:2]
@@ -65,5 +65,5 @@ print(f"Final accuracy: {acc / n_acc}")
 end0 = time.time()
 print(f"Test time: {end0 - start0}")
 
-with open('logs/emb_test_00.txt', 'a') as file:
+with open('logs/emb_log_01.txt', 'a') as file:
     file.write(str("Accuracy: " + str(acc) + ", final acc: " + str(acc / n_acc) + ", time: " + str({end0 - start0}) + '\n'))
