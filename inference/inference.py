@@ -1,15 +1,12 @@
 import tensorflow as tf
 import time
-from efficientnet.tfkeras import EfficientNetB0
 import pyarrow.parquet as pq
 import pyarrow as pa
 from pathlib import Path
 
 
-def run_inference(tfrecords_folder, output_folder, batch_size=1000):
+def run_inference(model, tfrecords_folder, output_folder, batch_size=1000):
     Path(output_folder).mkdir(parents=True, exist_ok=True)
-    # model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
-    model = tf.keras.models.load_model('models/final_model.hdf5')
     tfrecords_to_write_embeddings(tfrecords_folder, output_folder, model, batch_size)
 
 
