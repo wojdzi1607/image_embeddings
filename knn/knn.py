@@ -76,7 +76,7 @@ def display_results(q_path, res_path, results):
         x += 241
 
     cv2.imshow('Test Results', f_imgs)
-    cv2.imwrite(f'film/normal/img{str(q_path.stem)[-2:]}.png', f_imgs)
+    # cv2.imwrite(f'film/normal/img{str(q_path.stem)[-2:]}.png', f_imgs)
     cv2.waitKey()
 
 
