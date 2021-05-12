@@ -76,7 +76,7 @@ def display_results(q_path, res_path, results):
         x += 241
 
     cv2.imshow('Test Results', f_imgs)
-    # cv2.imwrite(f'film/img{str(q_path.stem)[-2:]}.png', f_imgs)
+    cv2.imwrite(f'film/normal/img{str(q_path.stem)[-2:]}.png', f_imgs)
     cv2.waitKey()
 
 
@@ -104,17 +104,15 @@ def display_results_seq(q_path, res_path, results, threshold):
     y = 210
     fontScale = 1
     color_default = (255, 255, 255)
-    color_green = (0, 255, 0)
-    color_yellow = (0, 255, 255)
-    color_red = (0, 0, 255)
 
     lineType = 1
     f_imgs = cv2.resize(f_imgs, (0, 0), fx=1.5, fy=1.5)
     for i, string in enumerate(distances):
         color = color_default
-        if abs(int(sections[0]) - int(sections[i])) <= threshold / 2 and i > 0: color = color_green
-        elif threshold / 2 < abs(int(sections[0]) - int(sections[i])) <= threshold and i > 0: color = color_yellow
-        elif threshold / 2 < abs(int(sections[0]) - int(sections[i])) > threshold and i > 0: color = color_red
+
+        diff = abs(int(sections[0]) - int(sections[i])) / threshold
+        if diff <= 0.5 and i > 0: color = (0, 255, 255 * 2*diff)
+        elif diff > 0.5 and i > 0: color = (0, max(0, 255 * (1-diff)), 255)
 
         if string != 'Query': string = np.round(string, 2)
         text = str('[' + str(sections[i]) + ']: ' + str(string))
@@ -127,5 +125,5 @@ def display_results_seq(q_path, res_path, results, threshold):
         x += 241
 
     cv2.imshow('Test Results', f_imgs)
-    # cv2.imwrite(f'film/img{str(q_path.stem)[-2:]}.png', f_imgs)
+    # cv2.imwrite(f'film/seq/img{str(sections[0])}.png', f_imgs)
     cv2.waitKey()

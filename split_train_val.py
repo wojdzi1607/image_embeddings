@@ -22,8 +22,6 @@ X, y = load_dataset(Path('data/split_dataset/split_dataset_NOMASK/train'))
 
 X_train, X_val, y_train, y_val = train_test_split(X, y, test_size=0.2, random_state=42, stratify=y)
 
-print(X_train, y_train)
-
 for idx_label, image_path in enumerate(X_train):
     img = cv2.imread(str(image_path))
     output_folder = "data/data_to_train/data_to_train_NOMASK/train/" + str("{:02d}".format(y_train[idx_label]))

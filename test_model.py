@@ -19,14 +19,14 @@ random.seed(42)
 # model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
 model = MobileNet(weights="imagenet", include_top=False, pooling="avg")
 
-path_images = "data/split_dataset/split_dataset_NOMASK/train"
+path_images = "data/split_dataset/split_dataset_390_NOMASK/train"
 path_tfrecords = "data/tfrecords"
 path_embeddings = "data/embeddings"
 
 write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=1)
 run_inference(model, tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
 
-inputPath = Path("data/split_dataset/split_dataset_NOMASK/test")
+inputPath = Path("data/split_dataset/split_dataset_390_NOMASK/test")
 inputFiles = inputPath.glob("**/*.jpeg")
 
 paths = []
@@ -41,13 +41,10 @@ mean_time = 0
 y_true = []
 y_pred = []
 for path_to_q_img in paths:
-
+    # Load query and emb
     n_acc += 1
-
     image = cv2.imread(str(path_to_q_img))
-
     start = time.time()
-
     [id_to_name, name_to_id, embeddings] = knn.add_to_embeddings_no_tf(image, path_embeddings, model)
 
     # Build index

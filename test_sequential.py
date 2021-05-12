@@ -39,13 +39,10 @@ n_acc = 0
 mean_time = 0
 
 for path_to_q_img in paths:
-
+    # Load query and emb
     n_acc += 1
-
     image = cv2.imread(str(path_to_q_img))
-
     start = time.time()
-
     [id_to_name, name_to_id, embeddings] = knn.add_to_embeddings_no_tf(image, path_embeddings, model)
 
     # Build index
@@ -59,7 +56,7 @@ for path_to_q_img in paths:
 
     end = time.time()
     # Threshold
-    threshold = 1
+    threshold = 6
 
     # Display results
     knn.display_results_seq(path_to_q_img, path_images, results, threshold)    # Comment this line when GPU is testing
