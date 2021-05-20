@@ -37,7 +37,9 @@ random.shuffle(paths)
 acc = 0
 n_acc = 0
 mean_time = 0
-
+# Mean square error
+y_true = []
+y_pred = []
 for path_to_q_img in paths:
     # Load query and emb
     n_acc += 1
@@ -56,15 +58,16 @@ for path_to_q_img in paths:
 
     end = time.time()
     # Threshold
-    threshold = 6
+    threshold = 3
 
     # Display results
-    knn.display_results_seq(path_to_q_img, path_images, results, threshold)    # Comment this line when GPU is testing
+    # knn.display_results_seq(path_to_q_img, path_images, results, threshold)    # Comment this line when GPU is testing
 
     # Calculate accuracy
     q = str(path_to_q_img.stem)[0:4]
     p = str(top_knn)[0:4]
-
+    y_true.append(q)
+    y_pred.append(p)
     if abs(int(q) - int(p)) <= threshold:
         acc += 1
     mean_time += (end - start)
@@ -74,3 +77,6 @@ print(f"\nMean accuracy: {acc / n_acc}\nMean time: {mean_time / n_acc}\nTotal ti
 
 with open('logs/seq_01.txt', 'a') as file:
     file.write(str("Mean accuracy: " + str(acc / n_acc) + ", mean time: " + str(mean_time / n_acc) + ", total time: " + str(mean_time) + '\n'))
+
+from sklearn.metrics import mean_absolute_error
+print(f"mean_squared_error: {mean_absolute_error(y_true, y_pred)}")

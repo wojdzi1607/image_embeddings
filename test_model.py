@@ -8,7 +8,7 @@ import warnings
 import tensorflow as tf
 from pathlib import Path
 from tensorflow.keras.applications import MobileNet
-from efficientnet.tfkeras import EfficientNetB0
+from efficientnet.tfkeras import EfficientNetB0, EfficientNetB1
 
 
 warnings.filterwarnings("ignore")
@@ -16,17 +16,17 @@ random.seed(42)
 
 # Select model
 # model = tf.keras.models.load_model('models/final_model.hdf5')
-# model = EfficientNetB0(weights="imagenet", include_top=False, pooling="avg")
+# model = EfficientNetB1(weights="imagenet", include_top=False, pooling="avg")
 model = MobileNet(weights="imagenet", include_top=False, pooling="avg")
 
-path_images = "data/split_dataset/split_dataset_390_NOMASK/train"
+path_images = "data/split_dataset/split_dataset_NOMASK/train"
 path_tfrecords = "data/tfrecords"
 path_embeddings = "data/embeddings"
 
 write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=1)
 run_inference(model, tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
 
-inputPath = Path("data/split_dataset/split_dataset_390_NOMASK/test")
+inputPath = Path("data/split_dataset/split_dataset_NOMASK/test")
 inputFiles = inputPath.glob("**/*.jpeg")
 
 paths = []
@@ -59,7 +59,7 @@ for path_to_q_img in paths:
     end = time.time()
 
     # Display results
-    knn.display_results(path_to_q_img, path_images, results)    # Comment this line when GPU is testing
+    # knn.display_results(path_to_q_img, path_images, results)    # Comment this line when GPU is testing
 
     # Calculate accuracy
     q = str(path_to_q_img.stem)[0:2]
@@ -77,10 +77,10 @@ with open('logs/emb_fast01.txt', 'a') as file:
     file.write(str("Mean accuracy: " + str(acc / n_acc) + ", mean time: " + str(mean_time / n_acc) + ", total time: " + str(mean_time) + '\n'))
 
 
-from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
-import matplotlib.pyplot as plt
-
-cm = confusion_matrix(y_true, y_pred, normalize='true')
-disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-disp.plot()
-plt.show()
+# from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+# import matplotlib.pyplot as plt
+#
+# cm = confusion_matrix(y_true, y_pred, normalize='true')
+# disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+# disp = disp.plot(cmap='Blues')
+# plt.show()

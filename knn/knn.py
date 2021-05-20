@@ -19,8 +19,8 @@ def build_index(emb):
     d = emb.shape[1]
     xb = emb
     # index = faiss.IndexFlatIP(d)
-    # index = faiss.IndexFlatL2(d)
-    index = faiss.IndexLSH(d, 2*d)
+    index = faiss.IndexFlatL2(d)
+    # index = faiss.IndexLSH(d, 4*d)
 
     index.add(xb)
     return index
