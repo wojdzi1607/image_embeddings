@@ -9,73 +9,74 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 
 warnings.filterwarnings("ignore")
 
+layers = [-10, -20, -30, -40, -50, -60, -70, -80, -90, -100]
+for num_layer in layers:
+    # Load pre-trained model
+    model = EfficientNetB1(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")
+    # model = MobileNet(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")
 
-# Load pre-trained model
-model = EfficientNetB1(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")
-# model = MobileNet(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")
+    # Freeze some layers [!]
+    for layer in model.layers[:num_layer]:
+        layer.trainable = False
+        print(layer.name)
 
-# Freeze some layers [!]
-for layer in model.layers[:-42]:
-    layer.trainable = False
-    print(layer.name)
+    print(model.summary())
+    batch_size = 32
 
-print(model.summary())
-batch_size = 32
+    # Load data
+    train_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1 / 255,
+                                                                      rotation_range=15,
+                                                                      width_shift_range=5,
+                                                                      height_shift_range=5)
+    valid_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1 / 255)
+    train_generator_with_data = train_generator.flow_from_directory('data/data_to_train/data_to_train_NOMASK/train', batch_size=batch_size, shuffle=True)
+    valid_generator_with_data = valid_generator.flow_from_directory('data/data_to_train/data_to_train_NOMASK/val', batch_size=batch_size)
 
-# Load data
-train_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1 / 255,
-                                                                  rotation_range=15,
-                                                                  width_shift_range=5,
-                                                                  height_shift_range=5)
-valid_generator = tf.keras.preprocessing.image.ImageDataGenerator(rescale=1 / 255)
-train_generator_with_data = train_generator.flow_from_directory('data/data_to_train/data_to_train_NOMASK/train', batch_size=batch_size, shuffle=True)
-valid_generator_with_data = valid_generator.flow_from_directory('data/data_to_train/data_to_train_NOMASK/val', batch_size=batch_size)
+    # Add classification layer
+    trainable_model = tf.keras.Sequential([
+        model,
+        tf.keras.layers.Dense(57, activation='softmax')
+    ])
 
-# Add classification layer
-trainable_model = tf.keras.Sequential([
-    model,
-    tf.keras.layers.Dense(57, activation='softmax')
-])
+    # Create callbacks
+    logdir = "logs/scalars/" + datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard = TensorBoard(log_dir=logdir)
+    reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
+                                  patience=3)
+    checkpoint = ModelCheckpoint(filepath='models/val_model.hdf5',
+                                 monitor='val_loss',
+                                 verbose=1,
+                                 save_best_only=True,
+                                 mode='min')
+    earlystopping = EarlyStopping(monitor='val_loss', patience=5)
+    callbacks = [checkpoint, earlystopping, reduce_lr]
 
-# Create callbacks
-logdir = "logs/scalars/" + datetime.now().strftime("%Y%m%d-%H%M%S")
-tensorboard = TensorBoard(log_dir=logdir)
-reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2,
-                              patience=3)
-checkpoint = ModelCheckpoint(filepath='models/val_model.hdf5',
-                             monitor='val_loss',
-                             verbose=1,
-                             save_best_only=True,
-                             mode='min')
-earlystopping = EarlyStopping(monitor='val_loss', patience=5)
-callbacks = [checkpoint, earlystopping, reduce_lr]
+    # Compile model
+    learning_rate = 1e-3
+    optimizer = Adam(learning_rate)
+    loss_function = tf.keras.losses.SparseCategoricalCrossentropy()
 
-# Compile model
-learning_rate = 1e-3
-optimizer = Adam(learning_rate)
-loss_function = tf.keras.losses.SparseCategoricalCrossentropy()
+    trainable_model.compile(optimizer=optimizer,
+                            loss='categorical_crossentropy',
+                            metrics=['accuracy'])
+    # metrics=['accuracy', tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
+    training_samples = train_generator_with_data.n
+    validation_samples = valid_generator_with_data.n
 
-trainable_model.compile(optimizer=optimizer,
-                        loss='categorical_crossentropy',
-                        metrics=['accuracy'])
-# metrics=['accuracy', tf.keras.metrics.Precision(), tf.keras.metrics.Recall()]
-training_samples = train_generator_with_data.n
-validation_samples = valid_generator_with_data.n
+    print(trainable_model.summary())
 
-print(trainable_model.summary())
+    # Train model
+    trainable_model.fit(
+        train_generator_with_data,
+        steps_per_epoch=training_samples // batch_size,
+        validation_data=valid_generator_with_data,
+        validation_steps=validation_samples // batch_size,
+        epochs=20,
+        callbacks=callbacks,
+        verbose=1
+    )
 
-# Train model
-trainable_model.fit(
-    train_generator_with_data,
-    steps_per_epoch=training_samples // batch_size,
-    validation_data=valid_generator_with_data,
-    validation_steps=validation_samples // batch_size,
-    epochs=20,
-    callbacks=callbacks,
-    verbose=1
-)
-
-# Remove last layer and save best model
-trainable_model = tf.keras.models.load_model('models/val_model.hdf5')
-trainable_model._layers.pop()
-trainable_model.save('models/final_model.hdf5')
+    # Remove last layer and save best model
+    trainable_model = tf.keras.models.load_model('models/val_model.hdf5')
+    trainable_model._layers.pop()
+    trainable_model.save(f'models/final_model_{str(num_layer)[1:]}.hdf5')
