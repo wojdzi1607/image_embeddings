@@ -9,7 +9,7 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLRO
 
 warnings.filterwarnings("ignore")
 
-layers = [-10, -20, -30, -40, -50, -60, -70, -80, -90, -100]
+layers = [-10, -20, -30, -40, -50, -60, -70, -80, -90, -100]    # Select how many layers unfreeze
 for num_layer in layers:
     # Load pre-trained model
     model = EfficientNetB1(weights="imagenet", include_top=False, input_shape=(120, 160, 3), pooling="avg")

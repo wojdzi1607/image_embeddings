@@ -15,7 +15,7 @@ warnings.filterwarnings("ignore")
 random.seed(42)
 
 # Select model
-# model = tf.keras.models.load_model('models/final_model.hdf5')
+# model = tf.keras.models.load_model('models/final_model_100.hdf5')
 # model = EfficientNetB1(weights="imagenet", include_top=False, pooling="avg")
 model = MobileNet(weights="imagenet", include_top=False, pooling="avg")
 

@@ -23,8 +23,8 @@ path_images = "data/split_dataset/split_dataset_sequential/train"
 path_tfrecords = "data/tfrecords"
 path_embeddings = "data/embeddings"
 
-# write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=1)
-# run_inference(model, tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
+write_tfrecord(image_folder=path_images, output_folder=path_tfrecords, num_shards=1)
+run_inference(model, tfrecords_folder=path_tfrecords, output_folder=path_embeddings, batch_size=32)
 
 inputPath = Path("data/split_dataset/split_dataset_sequential/test")
 inputFiles = inputPath.glob("**/*.jpeg")
@@ -77,6 +77,3 @@ print(f"\nMean accuracy: {acc / n_acc}\nMean time: {mean_time / n_acc}\nTotal ti
 
 with open('logs/seq_01.txt', 'a') as file:
     file.write(str("Mean accuracy: " + str(acc / n_acc) + ", mean time: " + str(mean_time / n_acc) + ", total time: " + str(mean_time) + '\n'))
-
-from sklearn.metrics import mean_absolute_error
-print(f"mean_squared_error: {mean_absolute_error(y_true, y_pred)}")
